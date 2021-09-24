@@ -1,0 +1,194 @@
+/*======================= CONSTRAINTS - KISITLAMALAR ======================================
+               
+    NOT NULL - Bir sutunun  NULL icermemesini garanti eder. 
+
+    UNIQUE - Bir sutundaki tum degerlerin BENZERSÝZ olmasýný garanti eder.  Null kabul eder, hatta birden fazla null deger girebiliriz.
+
+    PRIMARY KEY - Bir sutunun NULL icermemesini ve sutundaki verilerin 
+                  BENZERSÝZ olmasýný garanti eder.(NOT NULL ve UNIQUE birlesimi gibi)
+
+    FOREIGN KEY - Baska bir tablodaki Primary Key’i referans gostermek icin kullanilir. 
+                  Boylelikle, tablolar arasýnda iliski kurulmus olur. 
+
+    CHECK - Bir sutundaki tum verilerin belirlenen ozel bir sartý saglamasýný garanti eder. 
+    Soldan tablo silerken tablonun kapali olmasi lazim. */
+    
+    --ORNEK 1 - NOT NULL--
+    --ogrenciler tablosu olusturalim ve id field'ini bos birakilamaz yapalim 
+    
+CREATE TABLE ogrenciler (
+id CHAR (4) NOT NULL,
+isim VARCHAR(50),
+not_ort NUMBER (4,2), --98,55 gibi bir not girebiliriz boyle mesela
+kayit_tarihi DATE 
+);
+
+INSERT INTO ogrenciler VALUES ('1234', 'Hasan', 75.25, '14-01-2020');
+INSERT INTO ogrenciler VALUES ('1234', 'Ayse', null, null);
+INSERT INTO ogrenciler (id, isim) VALUES ('3456', 'Fatma');
+INSERT INTO ogrenciler VALUES (null, 'Osman', 45.25, '5-01-2020'); --Error report - ORA-01400: ("BAHARKO"."OGRENCILER"."ID") içine NULL eklenemez
+
+SELECT * FROM ogrenciler;
+
+
+--ORNEK 2 - UNIQUE
+--tedarikciler olusturalim id unique olsun
+
+CREATE TABLE tedarikciler
+(
+id CHAR (4) UNIQUE,
+isim VARCHAR (50),
+adres VARCHAR (100),
+tarih DATE
+);
+
+INSERT INTO tedarikciler VALUES ('1234', 'Ayse', 'Mehmet Mah Izmir', '10.11.20');
+INSERT INTO tedarikciler VALUES ('1234', 'Fatma', 'Veli Mah Istanbul', '15.11.20'); -- Error report - ORA-00001: benzersiz kural (BAHARKO.SYS_C0010973) ihlal edildi
+INSERT INTO tedarikciler VALUES (null, 'Cem', 'Fatih Mah Denizli', '15.11.1997');
+INSERT INTO tedarikciler VALUES (null, 'Can', 'Dari Mah Samsun', '15.11.1998');
+
+--Unique constraint, duplication'a yani tekrara izin vermez ancak istediginiz kadar null girebilirsiniz
+
+SELECT * FROM tedarikciler;
+
+--ORNEK 3 - PRIMARY KEY
+
+CREATE TABLE personel
+(
+id CHAR (5) PRIMARY KEY,
+isim VARCHAR (50) UNIQUE,
+maas NUMBER (5) NOT NULL,
+iseBaslamaTarihi DATE
+);
+
+INSERT INTO personel VALUES ('10001', 'Ahmet Aslan', 7000, '13-04-2018');
+INSERT INTO personel VALUES ('10001', 'Mehmet Yilmaz' , 12000, '14-04-18');--ORA-00001: benzersiz kural (BAHARKO.SYS_C0010975) ihlal edildi
+INSERT INTO personel VALUES ('10003', '', 5000, '14-04-18');
+INSERT INTO personel VALUES ('10004', 'Veli Han', 5000, '14-04-18');
+INSERT INTO personel VALUES ('10005', 'Ahmet Aslan', 5000, '14-04-18');--ORA-00001: benzersiz kural (BAHARKO.SYS_C0010976) ihlal edildi
+INSERT INTO personel VALUES (NULL, 'Canan Yas', NULL, '12-04-19');-- null olmaz hem id hem maas hata verir
+
+SELECT * FROM personel;
+
+--ORNEK 4 - PRIMARY KEY
+
+CREATE TABLE ogrenciler3
+(
+ogrenci_id char(4) PRIMARY KEY,
+isim_soyisim VARCHAR2(50),
+not_ort NUMBER(5,2), --100,00
+kayit_tarihi DATE -- 14-01-2021
+);
+
+
+INSERT INTO ogrenciler3 VALUES ('1234', 'hasan yaman',75.70,'14-01-2020');
+INSERT INTO ogrenciler3 VALUES (NULL, 'veli yaman',85.70,'14-01-2020'); -- id null olamaz
+INSERT INTO ogrenciler3 VALUES ('1234', 'Ali Can',55.70,'14-06-2020'); -- id benzersiz olmalý, daha önce verilen id kullanýlamaz
+INSERT INTO ogrenciler3 (isim_soyisim) VALUES ( 'Veli Cem'); -- id vermeden baska seyler vermeye gecemezsin, default null atar, bu da primary'ye uymaz
+INSERT INTO ogrenciler3 (ogrenci_id) VALUES ( '5687');
+
+SELECT * FROM ogrenciler3;
+
+--PRIMARY KEY OLUSTURMANIN ALTERNATIF YONTEMI--
+--Bu yontemde kisitlamaya istedigimiz ismi atayabiliriz.
+
+CREATE TABLE calisanlar(
+id CHAR (5), -- Normalde buraya PRIMARY KEY yazip hallederiz
+isim VARCHAR (50) UNIQUE,
+maas NUMBER (5) NOT NULL,
+CONSTRAINT id_primary PRIMARY KEY (id) -- Isim verebilmek icin bu sekilde yaziyoruz. Araya ne isim vereceksek onu yazdik.
+);
+
+INSERT INTO calisanlar VALUES ('10001', 'Ahmet Aslan', 7000);
+INSERT INTO calisanlar VALUES ( '10002', 'Mehmet Yýlmaz', 12000);
+INSERT INTO calisanlar VALUES ('10003', 'CAN', 5000);
+
+SELECT * FROM calisanlar;
+--Bir tabloya data eklerken constraint'e dikkat edilmelidir.
+
+-- ORNEK 5 - FOREIGN KEY
+
+CREATE TABLE adresler 
+(
+adres_id CHAR (5),
+sokak VARCHAR (30),
+cadde VARCHAR (30),
+sehir VARCHAR (15),
+CONSTRAINT id_foreign FOREIGN KEY(adres_id) REFERENCES calisanlar (id) --parent-child tablolari boyle bagliyoruz
+);
+
+INSERT INTO adresler VALUES ('10001','Mutlu Sok', '40.Cad.','Istanbul');
+INSERT INTO adresler VALUES ('10001','Can Sok', '50.Cad.','Ankara');
+INSERT INTO adresler VALUES ('10002','Aða Sok', '30.Cad.','Antep');
+INSERT INTO adresler VALUES ('','Aða Sok', '30.Cad.','Antep');
+INSERT INTO adresler VALUES ('','Aða Sok', '30.Cad.','Antep');
+--Foreign Key'e null degeri atanabilir
+
+INSERT INTO adresler VALUES ('10004','Gel Sok', '60.Cad.','Van'); -- parent'ta olmayan id'li veri giremeyiz, cunku orada yoksa bu kime baglanacak
+
+SELECT * FROM calisanlar; --parent
+SELECT * FROM adresler; --child
+
+DROP TABLE calisanlar; --Child silinmeden parent silinmez, once child'i silmemiz gerek
+DROP TABLE adresler; --Once bunu sildik
+
+--ogrenciler5 tablosunu olusturun ve id, isim hanelerinin birlesimini primary key yapin
+
+CREATE TABLE ogrenciler5 
+(
+id CHAR (4),
+isim VARCHAR (20),
+gpa NUMBER (5,2),
+kayitTarihi DATE,
+CONSTRAINT ogrenciler5_primary PRIMARY KEY (id, isim) -- birden fazla field ile primary key yaparsak bir degisken mutlaka farkli olmali, hepsi ayni olamaz
+-- 10, Ayse (+)
+-- 10, Ayse (- iki field da ayni olamaz)
+-- 10, Fatma (+)
+-- 11, Ayse (+)
+);
+
+INSERT INTO ogrenciler5 VALUES (NULL,'Veli Cem',90.6,'15-05-2019'); -- ORA-01400: ("BAHARKO"."OGRENCILER5"."ID") içine NULL eklenemez
+INSERT INTO ogrenciler5 VALUES (1234,NULL,90.6,'15-05-2019'); -- ORA-01400: ("BAHARKO"."OGRENCILER5"."ISIM") içine NULL eklenemez
+INSERT INTO ogrenciler5 VALUES (1234,'Ali Can',90.6,'15-05-2019'); -- PK= 1234Ali Can
+INSERT INTO ogrenciler5 VALUES (1234,'Veli Cem',90.6,'15-05-2019'); -- PK=1234Veli Cem
+INSERT INTO ogrenciler5 VALUES (1234,'Oli Can',90.6,'15-05-2019');
+-- Bu son 3 insertion'da isimler farkli oldugu icin sikinti olmuyor id'ler ayni olmasina ragmen 
+
+SELECT * FROM ogrenciler5;
+
+--ORNEK 6--
+
+--“tedarikciler4” isimli bir Tablo olusturun. Icinde “tedarikci_id”, “tedarikci_isim”, “iletisim_isim” field’lari olsun.
+--“tedarikci_id” ve “tedarikci_isim” fieldlarini birlestirerek Primary Key olusturun.
+--“urunler2” isminde baska bir tablo olusturun.Icinde “tedarikci_id” ve “urun_id” fieldlari olsun.
+--“tedarikci_id” ve “urun_id” fieldlarini birlestirerek Foreign Key olusturun
+
+CREATE TABLE tedarikciler4
+(
+tedarikci_id CHAR (4),
+tedarikci_ismi VARCHAR (20),
+iletisim_isim VARCHAR (20),
+CONSTRAINT tedarikci4_primary PRIMARY KEY (tedarikci_id, tedarikci_ismi) --char+varchar
+);
+
+CREATE TABLE urunler2
+(
+tedarikci_id CHAR (4),
+urun_id VARCHAR (5),
+CONSTRAINT urunler2_foreign FOREIGN KEY (tedarikci_id, urun_id) REFERENCES tedarikciler4 
+);                                                                                     --char+varchar
+
+-- ORNEK 7 --
+
+CREATE TABLE sehirler2 (	
+alan_kodu CHAR(3 ),
+isim VARCHAR2(50),
+nufus NUMBER(8,0) CHECK (nufus>1000) --verecegimiz degerlerle ilgili bir kisitlama olsun istiyorsak check kullaniyoruz if gibi
+);
+
+INSERT INTO sehirler2 VALUES ('312', 'Ankara', 5750000);
+INSERT INTO sehirler2 VALUES ('232', 'izmir', 375); -- ORA-02290: check constraint (BAHARKO.SYS_C0011031) violated
+INSERT INTO sehirler2 VALUES ('232', 'izmir', 3750000);
+INSERT INTO sehirler2 VALUES ('436', 'Maras', NULL);
+
+

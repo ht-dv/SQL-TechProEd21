@@ -1,0 +1,153 @@
+/*==================== SET (küme) OPERATORLERI: UNION, UNION ALL======================
+    set=küme diyelim diðer set (sql komutu) ile karýþmasýn
+    UNION, UNION ALL, INTERSECT, ve MINUS gibi SET operatorleri yardimiyla
+    Çoklu Sorgular birlestirilebilirler.ayný tablodan yada farklý tablodan sütunlarý birleþtirip ayný sütunda yazdýrma
+    UNION :  Bir SET operatorudur. 2 veya daha fazla Sorgu ifadesinin sonuc
+    kumelerini birlesitirerek tek bir sonuc kumesi olusturur. (iki kümenin birleþimi)
+    -- UNION
+-- Eger tek sorguda birlestiremeyecegim iki sorgunun sonucunu ayni tabloda
+-- gormek istersek UNION islemi kullanilir
+-- BU durumda dikkat etmemiz gereken konu iki sorguda da field sayisi ve
+-- alt alta gelecek field data tiplerinin ayni olmasidir
+    -- UNION ALL komutu ise tekrara bakmaksizin iki sorgudan gelen tum sonuclari listeler
+-- UNION ALL komutunda da iki sorgunun sonucunun esit sayida field'a ve data
+-- tiplerine sahip olmasi gereklidir
+     SÜTUN birleþtirme=> SET
+     TABLO birleþtirme=> JOIN
+    Syntax:
+    ----------
+    SELECT sutun_adi,sutun_adi2, .. FROM tablo_adi1
+    UNION
+    SELECT sutun_adi1, sutun_adi2, .. FROM tablo_adi2;
+    NOT: UNION operatoru SADECE benzersiz degerleri alýr. Benzerli verileri almak
+    için UNION ALL kullanýlýr. */
+    
+    CREATE TABLE personel3
+    (
+        id NUMBER(9),
+        isim VARCHAR2(50),
+        sehir VARCHAR2(50),
+        maas NUMBER(20),
+        sirket VARCHAR2(20)
+    );
+    
+    INSERT INTO personel3 VALUES(123456789, 'Ali Yilmaz', 'Istanbul', 5500, 'Honda');
+    INSERT INTO personel3 VALUES(234567890, 'Veli Sahin', 'Istanbul', 4500, 'Toyota');
+    INSERT INTO personel3 VALUES(345678901, 'Mehmet Ozturk', 'Ankara', 3500, 'Honda');
+    INSERT INTO personel3 VALUES(456789012, 'Mehmet Ozturk', 'Izmir', 6000, 'Ford');
+    INSERT INTO personel3 VALUES(567890123, 'Mehmet Ozturk', 'Ankara', 7000, 'Tofas');
+    INSERT INTO personel3 VALUES(453445611, 'Veli Sahin', 'Ankara', 4500, 'Ford');
+    INSERT INTO personel3 VALUES(123456710, 'Hatice Sahin','Bursa', 4200, 'Honda');
+
+-- ORNEK 1 --
+-- Maasi 4000’den cok olan isci isimlerini ve 5000 liradan fazla maas alinan sehirleri ayni sutunda gosteren sorguyu yaziniz. 
+
+    SELECT isim AS isim_veya_sehir, maas FROM personel3 WHERE maas>4000 UNION ALL SELECT sehir, maas FROM personel3 WHERE maas>5000;
+-- Bu ust satirda union all kullanirsak tekrarli verileri silmez, union kullanirsak tekrarlilari siler, sadece birini alir. (Sadece birlestirdigimiz tablodaki verilerden tekrarli olanlar veya olmayanlara bakar)
+
+-- ORNEK 2 --
+-- Mehmet Ozturk ismindeki kisilerin aldigi maaslari ve Istanbul’daki personelin maaslarini yuksekten alcaga dogru siralayarak bir tabloda gosteren sorguyu yaziniz.
+
+    SELECT isim AS isim_sehir, maas FROM personel3 WHERE isim='Mehmet Ozturk' UNION SELECT sehir, maas FROM personel3 WHERE sehir='Istanbul' ORDER BY maas DESC;
+
+
+/*======================== FARKLI TABLOLARDAN BIRLESTIRME ====================*/
+
+    CREATE TABLE personel_bilgi
+    (
+        id NUMBER(9),
+        tel CHAR(10) UNIQUE ,
+        cocuk_sayisi NUMBER(2)
+    );
+    
+    INSERT INTO personel_bilgi VALUES(123456789, '5302345678' , 5);
+    INSERT INTO personel_bilgi VALUES(234567890, '5422345678', 4);
+    INSERT INTO personel_bilgi VALUES(345678901, '5354561245', 3);
+    INSERT INTO personel_bilgi VALUES(456789012, '5411452659', 3);
+    INSERT INTO personel_bilgi VALUES(567890123, '5551253698', 2);
+    INSERT INTO personel_bilgi VALUES(453445611, '5524578574', 2);
+    INSERT INTO personel_bilgi VALUES(123456710, '5537488585', 1);
+
+-- ORNEK 3 --
+-- id' si 123456789 olan personelin personel tablosu'ndan sehir ve maasini, personel_bilgi tablosundan da tel ve cocuk sayisini yazdiriniz.
+
+SELECT id, sehir AS sehir_tel, maas AS maas_cocuk_sayisi FROM personel3 WHERE id=123456789 UNION SELECT id, tel, cocuk_sayisi FROM personel_bilgi WHERE id=123456789;
+-- Ayni data type'lari ayni sutuna denk gelmeli. Yani yukarida mesela union'dan sonra once cocuk_sayisi sonra tel yazamazdik. (tel char- isim char, maas number-cocuk_sayisi number)
+
+
+/*========================= SET OPERATORLERI: INTERSECT ========================
+    INTERSECT=> iki kümenin kesisimini döndürür
+    INTERSECT operarotu 2 veya daha fazla Sorgu ifadesinin sonuclarini
+    dondurmek icin kullanilir. Ancak, intersect SADECE tum sorgularin ortak
+    verilerini (kesimlerini) dondurur.
+    Syntax:
+    ----------
+    SELECT sutun_adi,sutun_adi2, .. FROM tablo_adi1
+    INTERSECT
+    SELECT sutun_adi1, sutun_adi2, .. FROM tablo_adi2;
+==============================================================================*/
+
+
+-- ORNEK4 -- 
+-- Personel tablosundan Istanbul veya Ankara’da calisanlarin id’lerini sorgulayiniz. Personel_bilgi tablosundan 2 veya 3 cocugu olanlarin id'lerini sorgulayiniz. Bu iki sorguyu INTERSECT ile birlestiriniz (ortak elemanlari).
+
+    SELECT id FROM personel3 WHERE sehir IN ('Ankara', 'Istanbul') INTERSECT SELECT id FROM personel_bilgi WHERE cocuk_sayisi IN (2, 3);
+
+-- ORNEK 5 --
+-- Honda, Ford ve Tofas’ta calisan ortak isimde personel varsa listeleyin.
+
+    SELECT isim FROM personel3 WHERE sirket='Honda'
+    INTERSECT
+    SELECT isim FROM personel3 WHERE sirket='Ford'
+    INTERSECT
+    SELECT isim FROM personel3 WHERE sirket='Tofas';
+    --Tek satirda birkac veri birden isteniyorsa AND ile, farkli satirlardan ortaklik isteniyorsa INTERSECT.
+
+-- ORNEK 6 --
+-- Toyota ve Ford sirketlerinde ayni maasi alan personel isimlerini listeleyin.
+
+    SELECT isim, maas FROM personel3 WHERE sirket='Toyota'
+    INTERSECT
+    SELECT isim, maas FROM personel3 WHERE sirket='Ford';
+    -- Bu ikiliyi birlestirdigimizde zaten ortak olani alacak bu sebeple tekrar maas=maas kontrolu yapmamiza gerek yok.
+    
+
+/*========================= SET OPERATORLERI: MINUS ============================
+    MINUS operatoru ilk Sorgu ifadesinde olup da diger sorgu ifadesinde olmayan
+    verileri dondurur. Yani 1. sorgu ile 2. sorgu arasindaki farklý olanlarý
+    dondurur. 
+    MINUS da UNION gibi getirdigi tablodaki bilgilerde tekrarli satirlardan sadece birini yazdirir
+    Syntax:
+    ----------
+    SELECT sutun_adi,sutun_adi2, .. FROM tablo_adi1
+    MINUS
+    SELECT sutun_adi1, sutun_adi2, .. FROM tablo_adi2;
+==============================================================================*/
+
+
+-- ORNEK 7 --
+-- 5000’den az maas alan ve Honda calisani olmayanlarin bilgilerini listeleyen bir sorgu yaziniz.
+
+-- 1. YONTEM: (MINUS ILE) 
+    SELECT * FROM personel3 WHERE maas<5000
+    MINUS
+    SELECT * FROM personel3 WHERE sirket='Honda'; 
+
+-- 2. YONTEM: (INTERSECT ILE)
+    SELECT * FROM personel3 WHERE maas<5000
+    INTERSECT
+    SELECT * FROM personel3 WHERE sirket<>'Honda';
+
+-- ORNEK8 --
+-- Ismi Mehmet Ozturk olup Izmir’de calismayanlarin isimlerini ve sehirlerini listeleyen sorguyu yaziniz.
+
+-- 1. YONTEM:
+    SELECT isim, sehir FROM personel3 WHERE isim='Mehmet Ozturk'
+    MINUS
+    SELECT isim, sehir FROM personel3 WHERE sehir='Izmir'; -- MINUS da UNION gibi tekrarli satirlardan sadece birini yazdirir
+
+-- 2. YONTEM:   
+    SELECT isim, sehir FROM personel3 WHERE isim='Mehmet Ozturk'
+    INTERSECT
+    SELECT isim, sehir FROM personel3 WHERE sehir<>'Izmir';
+    

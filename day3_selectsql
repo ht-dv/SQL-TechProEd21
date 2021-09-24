@@ -1,0 +1,207 @@
+-------------------------SELECT - WHERE -------------------------
+CREATE TABLE ogrenciler1
+(
+id NUMBER(9),
+isim VARCHAR2(50),
+adres VARCHAR2(100),
+sinav_notu NUMBER(3)
+);
+
+INSERT INTO ogrenciler1 VALUES(123, 'Ali Can', 'Ankara', 75);
+INSERT INTO ogrenciler1 VALUES(124, 'Merve Gul', 'Ankara', 85);
+INSERT INTO ogrenciler1 VALUES(125, 'Kemal Yasa', 'Istanbul', 85);
+
+SELECT * FROM ogrenciler1;
+
+
+/* ============================================================================
+   Verileri SELECT komutu ile veritabanýndan çekerken filtreleme yapmak için 
+   
+   Syntax
+   --------
+    SELECT ile birlikte WHERE komutu kullanýlabilir. 
+   
+    SELECT sutün1, sutün2
+        ...
+    FROM  tablo_adý WHERE koþul;
+==============================================================================*/
+
+-- ORNEK 1 --
+-- Sinav notu 80'den buyuk olan ogrencilerin tum bilgilerini listele.
+SELECT * FROM ogrenciler1 WHERE sinav_notu>80;
+
+-- ORNEK 2 --
+-- Adresi Ankara olan ogrencilerin isim ve adres bilgilerini listele.
+SELECT isim, adres FROM ogrenciler1 WHERE adres='Ankara';
+
+--ORNEK 3 --
+-- id'si 124 olan ogrencilerin tum bilgilerini sil.
+DELETE FROM ogrenciler1 WHERE id=124;
+
+-------------------------SELECT - BETWEEN -------------------------
+
+CREATE TABLE personel1
+(
+id CHAR(5),
+isim VARCHAR2(50),
+maas NUMBER(5)
+);
+INSERT INTO personel1 VALUES('10001', 'Ahmet Aslan', 7000);
+INSERT INTO personel1 VALUES( '10002', 'Mehmet Yilmaz' ,12000);
+INSERT INTO personel1 VALUES('10003', 'Meryem ', 7215);
+INSERT INTO personel1 VALUES('10004', 'Veli Han', 5000);
+INSERT INTO personel1 VALUES('10005', 'Mustafa Ali', 5500);
+INSERT INTO personel1 VALUES('10005', 'Ayse Can', 4000);
+SELECT * FROM personel1;
+
+-- ORNEK 4 --
+--id'si 10002 ile 10005 arasinda olan personelin bilgilerini listele.
+
+-- 1. YONTEM:
+SELECT * FROM personel1 WHERE id BETWEEN '10002' AND '10005'; --between'de ilk ve son degerler dahil
+
+-- 2. YONTEM:
+SELECT * FROM personel1 WHERE id >= '10002' AND id <= '10005';
+
+-- ORNEK 5 --
+-- Ismi Mehmet Yilmaz ile Veli Han arasindaki personel bilgilerini listele.
+SELECT * FROM personel1 WHERE isim BETWEEN 'Mehmet Yilmaz' AND 'Veli Han';
+
+-- ORNEK 6 -- 
+-- id'si 10002-10004 arasinda olmayan personelin maasini listele.
+SELECT id, maas FROM personel1 WHERE id NOT BETWEEN '10002' AND '10004'; 
+
+
+-------------------------SELECT - IN -------------------------
+/* 
+    IN birden fazla mantýksal ifade ile tanýmlayabileceðimiz durumlarý 
+    tek komutla yazabilme imkâný verir
+
+    SYNTAX:
+    -------
+    SELECT sutun1,sutun2, ... ( * de yazabiliriz)
+    FROM tablo_adý
+    WHERE sutun_adý IN (deger1, deger2, ...);
+*/
+
+-- ORNEK 7 --
+-- Maasi 4000, 5000, 7000 olan personelin bilgilerini listele.
+SELECT * FROM personel1 WHERE maas IN (4000, 5000, 7000);
+
+-----
+SELECT * FROM personel1 WHERE isim IN ('Veli Han', 'Ahmet Aslan');
+
+/*======================= SELECT - LIKE ======================================
+    NOT: LIKE anahtar kelimesi, sorgulama yaparken belirli patternleri kullanabilmemize olanak saglar.
+    SYNTAX:
+    -------
+    SELECT sutun1, sutun2,…
+    FROM  tablo_adi WHERE sutun LIKE pattern
+    PATTERN ICIN
+    -------------
+    %    ---> 0 veya daha fazla karakteri belirtir.
+    _    ---> Tek bir karakteri temsil eder.
+*/
+
+-- ORNEK 1 --
+-- Ismi A harfi ile baslayanlari listeleyin.
+
+SELECT * FROM personel1 WHERE isim LIKE 'A%'; -- A ile baslasin gerisi onemli degil
+
+-- ORNEK 2 --
+--  Ismi n harfi ile bitenleri listeleyin.
+SELECT * FROM personel1 WHERE isim LIKE '%n';
+
+-- ORNEK 3 --
+-- Isminin 2. harfi e olanlari listeleyin.
+SELECT * FROM personel1 WHERE isim LIKE '_e%';
+
+-- ORNEK 4 --
+-- Isminin 2. harfi e olup diger harflerinde y olanlari listeleyin.
+SELECT * FROM personel1 WHERE isim LIKE '_e%y%';
+
+-- ORNEK 5 --
+-- Ismi A harfi ile baslamayanlari listeleyin.
+SELECT * FROM personel1 WHERE isim NOT LIKE 'A%';
+
+-- ORNEK 6 --
+-- Isminde  a harfi olmayanlari listeleyin.
+SELECT * FROM personel1 WHERE isim NOT LIKE '%a%';
+
+-- ORNEK 7 --
+-- Maasinin son iki hanesi 00 olmayanlari listeleyin.
+SELECT * FROM personel1 WHERE maas NOT LIKE '%00';
+
+-- ORNEK 8 --
+-- Maasi 5 haneli olanlari listeleyin.
+SELECT * FROM personel1 WHERE maas LIKE '_____';
+
+-- ORNEK 9 --
+-- Isminin 1. harfi A ve 7. harfi A olan personeli listeleyin.
+SELECT * FROM personel1 WHERE isim LIKE 'A_____A%';
+
+
+/*======================= SELECT - REGEXP_LIKE ================================
+    Daha karmasik pattern ile sorgulama islemi için REGEXP_LIKE kullanilabilir.
+    Syntax:
+    --------
+    REGEXP_LIKE(sutun_adý, ‘pattern[] ‘, ‘c’ ] )
+             -- 'c' => case-sentisitive demektir ve default case-sensitive aktiftir.
+     -- 'i' => incase-sentisitive demektir.
+/* ========================================================================== */
+   
+    CREATE TABLE kelimeler
+    (
+        id NUMBER(10) UNIQUE,
+        kelime VARCHAR2(50) NOT NULL,
+        harf_sayisi NUMBER(6)
+    );
+    
+    INSERT INTO kelimeler VALUES (1001, 'hot', 3);
+    INSERT INTO kelimeler VALUES (1002, 'hat', 3);
+    INSERT INTO kelimeler VALUES (1003, 'hit', 3);
+    INSERT INTO kelimeler VALUES (1004, 'hbt', 3);
+    INSERT INTO kelimeler VALUES (1005, 'hct', 3);
+    INSERT INTO kelimeler VALUES (1006, 'adem', 4);
+    INSERT INTO kelimeler VALUES (1007, 'selim', 5);
+    INSERT INTO kelimeler VALUES (1008, 'yusuf', 5);
+    INSERT INTO kelimeler VALUES (1009, 'hip', 3);
+    INSERT INTO kelimeler VALUES (1010, 'HOT', 3);
+    INSERT INTO kelimeler VALUES (1011, 'hOt', 3);
+    INSERT INTO kelimeler VALUES (1012, 'h9t', 3);
+    INSERT INTO kelimeler VALUES (1013, 'hoot', 4);
+    INSERT INTO kelimeler VALUES (1014, 'haaat', 5);
+    
+-- ORNEK 1 --
+-- Icerisinde 'hi' bulunan kelimeleri listeleyeniz.
+-- SELECT * FROM kelimeler WHERE kelime LIKE '%hi%'; 
+    SELECT * FROM kelimeler WHERE REGEXP_LIKE (kelime, 'hi');
+    
+-- ORNEK 2 --
+-- Icerisinde 'ot' veya 'at' bulunan kelimeleri buyuk/kucuk harfe duyarsiz listele.
+    SELECT * FROM kelimeler WHERE REGEXP_LIKE (kelime, 'at|ot', 'i'); -- veya islemi icin | kullanilir (bosluksuz) 
+    
+-- ORNEK 3 --
+-- 'ho' veya 'hi' ile baslayan kelimeleri buyuk-kucuk harfe dikkat etmeksizin listeleyeniz.
+    SELECT * FROM kelimeler WHERE REGEXP_LIKE (kelime, '^ho|^hi', 'i'); -- baslangic icin ^ kullanilir
+    
+-- ORNEK 4 --
+-- Sonu 't' veya 'm' ile bitenleri buyuk-kucuk harfe dikkat etmeksizin listeleyeniz.
+    SELECT * FROM kelimeler WHERE REGEXP_LIKE (kelime, 't$|m$', 'i'); -- son icin $ isareti kullanilir
+    
+-- ORNEK 5 --
+-- h ile baþlayip t ile biten 3 HARFLI KELIMELERI buyuk-kucuk harfe dikkat etmeksizin listeleyeniz.
+    SELECT * FROM kelimeler WHERE REGEXP_LIKE (kelime, 'h[a-zA-Z0-9]t', 'i'); --h ile baslasin, koseli parantez icindekilerden biri ikinci harfim olsun, t ile bitsin (3 harfli)
+    
+-- ORNEK 6 --
+-- Icinde m veya i veya e olan kelimelerin tum bilgilerini listeleyiniz.
+    SELECT * FROM kelimeler WHERE REGEXP_LIKE (kelime, 'm|i|e');
+    
+-- ORNEK 7 --
+-- a veya s ile baþlayan kelimelerin tüm bilgilerini listeleyiniz.
+    SELECT * FROM kelimeler WHERE REGEXP_LIKE (kelime, '^a|^s');
+    
+    
+    
+    
+    

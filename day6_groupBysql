@@ -1,0 +1,100 @@
+/*============================ GROUP BY =====================================
+    GROUP BY cümlecigi bir SELECT ifadesinde satirlari, sutunlarin degerlerine
+    gore ozet olarak gruplamak icin kullanilir.
+    GROUP BY cümlecigi her grup basina bir satir dondurur.
+    GROUP BY genelde, AVG(),COUNT(),MAX(),MIN() ve SUM() gibi aggregate
+    fonksiyonlari ile birlikte kullanilir. */
+    
+    CREATE TABLE manav
+    (
+        isim varchar2(50),
+        urun_adi varchar2(50),
+        urun_miktari number(9)
+    );
+    
+    INSERT INTO manav VALUES( 'Ali', 'Elma', 5);
+    INSERT INTO manav VALUES( 'Ayse', 'Armut', 3);
+    INSERT INTO manav VALUES( 'Veli', 'Elma', 2);
+    INSERT INTO manav VALUES( 'Hasan', 'Uzum', 4);
+    INSERT INTO manav VALUES( 'Ali', 'Armut', 2);
+    INSERT INTO manav VALUES( 'Ayse', 'Elma', 3);
+    INSERT INTO manav VALUES( 'Veli', 'Uzum', 4);
+    INSERT INTO manav VALUES( 'Ali', 'Armut', 2);
+    INSERT INTO manav VALUES( 'Veli', 'Elma', 3);
+    INSERT INTO manav VALUES( 'Ayse', 'Uzum', 4);
+    INSERT INTO manav VALUES( 'Ali', '', 2);
+    
+    SELECT * FROM manav;
+    
+-- ORNEK 1 --
+-- Kisi ismine gore satilan toplam meyve miktarlarini gosteren sorguyu yaziniz.  ali=>5+2+2+2 sum= meyve sayilarini toplayacak.
+
+    SELECT isim, SUM (urun_miktari) AS toplam_urun FROM manav GROUP BY isim; -- isim isim grupla, herismi bir kere yaz ve o isimdeki meyve sayilarini toplayip ilgili ismin satirinda goster
+    
+-- ORNEK 2 --
+-- Satilan meyve turune (urun_adi) gore urun alan kisi sayisini gosteren sorguyu yaziniz. NULL olarak girilen meyveyi listelemesin. count=> elma alan kisileri sayacak mesela
+
+    SELECT urun_adi, COUNT (isim) FROM manav WHERE urun_adi IS NOT NULL GROUP BY urun_adi;
+    
+-- ORNEK 3 --
+-- Satilan meyve turune (URUN_ADÝ) göre satilan (urun_miktari )MIN ve MAX urun miktarlarini, MAX urun miktarina gore SIRALAYARAK listeyen sorguyu yaziniz.
+
+    SELECT urun_adi, MIN (urun_miktari), MAX (urun_miktari) FROM manav GROUP BY urun_adi ORDER BY MAX (urun_miktari) DESC;
+
+/* ==============SIRALAMA (KOMUT HIYERARSISI) ASAGIDAKI GIBI OLMALI =============
+select from
+where 1)gruplamadan bazi sartlara gore bazilarini ele
+group by 2)ozelliklerine gore grupla
+having 3)grup ozelliklerine gore sartla ele. Ya where ya having yani
+order by 4) bu gruplari istenilen ozellige gore sirala
+*/
+
+
+--ORNEK 4 --
+-- Kisi ismine ve urun adina (select) gore satilan urunlerin (sum)toplamini gruplandiran ve once isme gore sonra urun_adi na gore ters sirayla (order by) listeleyen sorguyu yaziniz. Once isme gore sonra meyvelere
+
+SELECT isim, urun_adi, SUM (urun_miktari) FROM manav GROUP BY isim, urun_adi ORDER BY isim, urun_adi DESC; -- bu en sondaki isim dogal sirali, urun_adi ters sirali oldu. desc sadece urun_adini baglar
+
+-- ORNEK 5 -- 
+/* Kisi ISMÝNE ve URUN ADINA göre, satýlan ürünlerin toplamýný bulan [SELECT ISÝM, URUN_ADÝ    SUM(URUN_MÝKTARÝ) GROUP BY ISÝM, URUN_MÝKTARÝ] ve bu toplam deðeri 3 ve fazlasý olan kayýtlarý toplam urun miktarlarina göre
+[HAVING SUM(URUN_MÝKTARÝ)>=3    ORDER BY SUM(URUN_MÝKTARÝ)] ters siralayarak (DESC) listeyen sorguyu yazýnýz.  
+    veli elma 5 
+    ali elma 5
+    ali armut 4...
+    
+--WHERE sum (urun_miktari)>2  kullanilamiyor cunku tablomuz kendisi orjinalinde bu veriye sahip degil ( where aggregate fonksiyonlari ile kullanilmiyor. Bunun yerine having method'u kullaniliyor.) 
+-- AGGREGATE (toplama sum, count vs) fonksiyonlari ile ilgili bir kosul koymak icin GROUP BY'dan sonra HAVING cümlecigi kullanilir.
+*/
+
+SELECT isim, urun_adi, SUM (urun_miktari) toplam_urun FROM manav GROUP BY isim, urun_adi HAVING SUM (urun_miktari)>=3 ORDER BY SUM (urun_miktari) DESC;
+
+-- ORNEK 6 --
+-- Satilan urun_adi'na gore gruplayip MAX urun sayilarini, (yine max urun sayisina gore) siralayarak listeyen sorguyu yaziniz. NOT: Sorgu, sadece MAX urun_miktari MIN urun_miktarýna esit olmayan kayitlari (where gibi kosul var) listelemelidir.
+
+SELECT urun_adi, MAX (urun_miktari) esit_olmayan_urunler FROM manav GROUP BY urun_adi HAVING MAX (urun_miktari) <> MIN (urun_miktari) ORDER BY MAX (urun_miktari);
+-- <> isareti != ile ayni kullanim, yani esit degil demek.
+
+/*============================= DISTINCT =====================================
+    DISTINCT cümlecigi bir SORGU ifadesinde benzer olan satirlari flitrelemek
+    için kullanilir. Dolayisiyla secilen sutun ya da sutunlar icin benzersiz veri
+    iceren satirlar olusturmaya yarar.
+    
+    SYNTAX
+    -------
+    SELECT DISTINCT sutun_adi1, sutun_adi2, satir_adi3
+    FROM  tablo_adi; */
+
+-- ORNEK 1 --
+-- Satilan farkli meyve turlerinin sayisini listeyen sorguyu yaziniz. (Kac farkli meyve tuur var, elma armut uzum=3)
+
+SELECT COUNT (DISTINCT urun_adi) urun_cesit_sayisi FROM manav;
+
+-- ORNEK 2 --
+-- Satilan meyve ve isimlerin (totalde) farkli olanlarini listeyen sorguyu yaziniz.
+
+SELECT DISTINCT urun_adi, isim FROM manav;
+
+-- ORNEK 3 --
+-- Satilan meyvelerin urun_mikarlarinin benzersiz olanlarinin toplamlarini listeyen sorguyu yaziniz.      2+3+4+5=14
+
+SELECT SUM (DISTINCT urun_miktari) toplam FROM manav;
